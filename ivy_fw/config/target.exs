@@ -1,5 +1,23 @@
 import Config
 
+# UI CONFIGURATION
+# When we deploy to a device, we use the "prod" configuration:
+import_config "../../ivy_ui/config/config.exs"
+import_config "../../ivy_ui/config/prod.exs"
+
+# Configuration opts:
+# - code_reloader:          # Nerves root filesystem is read-only, so disable the code reloader
+# - load_from_system_env:   # Use compile-time Mix config instead of runtime environment variables
+# - server                  # Start the server since we're running in a release instead of through `mix`
+config :ivy_ui, IvyUiWeb.Endpoint,
+  http: [port: 80, protocol_options: [idle_timeout: :infinity]],
+  load_from_system_env: false,
+  server: true,
+  url: [host: "nerves.local", port: 80],
+  code_reloader: false,
+  pubsub_server: IvyUi.PubSub,
+  live_view: [signing_salt: "Ih1xeYFN"]
+
 # Use shoehorn to start the main application. See the shoehorn
 # docs for separating out critical OTP applications such as those
 # involved with firmware updates.
@@ -42,13 +60,28 @@ config :nerves_firmware_ssh,
 config :vintage_net,
   regulatory_domain: "US",
   config: [
-    {"usb0", %{type: VintageNetDirect}},
-    {"eth0",
-     %{
-       type: VintageNetEthernet,
-       ipv4: %{method: :dhcp}
-     }},
-    {"wlan0", %{type: VintageNetWiFi}}
+    {
+      "usb0",
+      %{type: VintageNetDirect}
+    },
+    {
+      "eth0",
+      %{
+        type: VintageNetEthernet,
+        ipv4: %{method: :dhcp}
+      }
+    },
+    {"wlan0",
+      %{
+        type: VintageNetWiFi,
+        vintage_net_wifi: %{
+          key_mgmt: :wpa_psk,
+          ssid: System.get_env("NERVES_NETWORK_SSID"),
+          psk: System.get_env("NERVES_NETWORK_PSK")
+        },
+        ipv4: %{method: :dhcp}
+      }
+    }
   ]
 
 config :mdns_lite,

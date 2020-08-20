@@ -13,6 +13,9 @@ defmodule IvyUiWeb.Router do
     plug :accepts, ["json"]
   end
 
+  forward "/live_stream.mjpg", IvyUi.Streams.Live
+  forward "/delayed_stream.mjpg", IvyUi.Streams.Delayed
+
   scope "/", IvyUiWeb do
     pipe_through :browser
 

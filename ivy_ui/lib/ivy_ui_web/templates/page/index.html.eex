@@ -1,2 +1,2 @@
-<img src="http://nerves.local:4001/live_stream.mjpg" />
-<img src="http://nerves.local:4001/delayed_stream.mjpg" />
+<svg id="canvas" height="240" width="300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" style="background: url('live_stream.mjpg') no-repeat;"></svg>
+<svg id="canvas" height="240" width="300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" style="background: url('delayed_stream.mjpg') no-repeat;"></svg>

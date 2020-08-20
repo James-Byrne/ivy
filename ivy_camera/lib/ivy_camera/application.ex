@@ -14,7 +14,6 @@ defmodule IvyCamera.Application do
     [
       {Picam.Camera, []},
       {IvyCamera.Camera, []},
-      {Plug.Cowboy, scheme: :http, plug: IvyCamera.Router, options: [port: 4001]}
     ]
   end
 end

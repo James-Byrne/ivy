@@ -8,7 +8,9 @@ defmodule IvyCamera.Camera do
 
   use GenServer
 
-  @initial_state %{ frames: [], recording: false, delay: 100 }
+  @one_second 1000
+  @initial_delay 12000
+  @initial_state %{ frames: [], recording: false, delay: @initial_delay, framerate: 80 }
 
   def start_link(), do: start_link([])
   def start_link(_), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
@@ -16,8 +18,8 @@ defmodule IvyCamera.Camera do
   def init(_), do: {:ok, @initial_state}
 
   @doc "Start recording by adding new frames to the stack"
-  def handle_call(:start_recording, _, %{ delay: delay } = state) do
-    Process.send_after(self(), :push_frame, delay)
+  def handle_call(:start_recording, _, %{ framerate: framerate } = state) do
+    Process.send_after(self(), :push_frame, calculate_framerate(framerate))
     {:reply, :ok, start_recording(state)}
   end
 
@@ -30,9 +32,13 @@ defmodule IvyCamera.Camera do
   @doc "Retrieve the next frame from the stack"
   def handle_call({:next_frame, :live}, _, state),
     do: {:reply, {:ok, Picam.next_frame}, state}
-  def handle_call(:next_frame, _, state) do
+  def handle_call(:next_frame, _, %{ delay: 0 } = state) do
     {status, frame, new_state} = get_next_frame(state)
     {:reply, {status, frame}, new_state}
+  end
+  def handle_call(:next_frame, _, %{ delay: delay } = state) do
+    Process.send_after(self(), {:set_delay, 0}, delay)
+    {:reply, {:ok, Picam.next_frame}, state}
   end
 
   #
@@ -45,8 +51,14 @@ defmodule IvyCamera.Camera do
   @doc "Returns if the stream is recording or not"
   def handle_call(:frame_count, _, state), do: {:reply, Kernel.length(state.frames), state}
 
+  @doc "Returns the current framerate"
+  def handle_call(:get_framerate, _, state), do: {:reply, Kernel.length(state.framerate), state}
+
   @doc "This allows us to adjust the streams delay"
   def handle_call({:set_delay, delay}, _, state), do: {:reply, :ok, set_delay(state, delay)}
+
+  @doc "This allows us to adjust the streams framerate"
+  def handle_call({:set_framerate, framerate}, _, state), do: {:reply, :ok, set_framerate(state, framerate)}
 
   #
   # Implementation
@@ -62,16 +74,20 @@ defmodule IvyCamera.Camera do
 
   @doc "Pushes a new frame onto the stack"
   def handle_info(:push_frame, %{ recording: false } = state), do: {:noreply, state}
-  def handle_info(:push_frame, %{ delay: delay } = state) do
-    Process.send_after(self(), :push_frame, delay)
+  def handle_info(:push_frame, %{ framerate: framerate } = state) do
+    Process.send_after(self(), :push_frame, calculate_framerate(framerate))
     {:noreply, push_frame(state)}
   end
+
+  @doc "This allows us to adjust the streams delay"
+  def handle_info({:set_delay, delay}, state), do: {:noreply, set_delay(state, delay)}
 
   #
   # Functionality
   #
 
   defp set_delay(state, delay), do: %{ state | delay: delay }
+  defp set_framerate(state, framerate), do: %{ state | framerate: framerate }
 
   defp stop_recording(%{ recording: false } = state), do: state
   defp stop_recording(%{ recording: true } = state), do: %{ state | recording: false }
@@ -84,4 +100,6 @@ defmodule IvyCamera.Camera do
   defp get_next_frame(%{ frames: [h|t] } = state), do: {:ok, h, %{ state | frames: t }}
 
   defp push_frame(%{ frames: frames } = state), do: %{ state | frames: frames ++ [Picam.next_frame]}
+
+  defp calculate_framerate(framerate), do: Kernel.round(@one_second / framerate)
 end

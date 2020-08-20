@@ -23,24 +23,6 @@ config :nerves, source_date_epoch: "1592764937"
 
 config :logger, backends: [RingLogger]
 
-# UI CONFIGURATION
-# When we deploy to a device, we use the "prod" configuration:
-import_config "../../ivy_ui/config/config.exs"
-import_config "../../ivy_ui/config/prod.exs"
-
-# Configuration opts:
-# - code_reloader:          # Nerves root filesystem is read-only, so disable the code reloader
-# - load_from_system_env:   # Use compile-time Mix config instead of runtime environment variables
-# - server                  # Start the server since we're running in a release instead of through `mix`
-config :ivy_ui, IvyUiWeb.Endpoint,
-  http: [port: 80],
-  load_from_system_env: false,
-  server: true,
-  url: [host: "nerves.local", port: 80],
-  code_reloader: false,
-  pubsub_server: IvyUi.PubSub,
-  live_view: [signing_salt: "Ih1xeYFN"]
-
 if Mix.target() != :host do
   import_config "target.exs"
 end

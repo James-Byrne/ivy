@@ -23,9 +23,6 @@ defmodule IvyCamera.MixProject do
   defp deps do
     [
       {:picam, "~> 0.4.0"},
-      {:plug, "~> 1.8"},
-      {:plug_cowboy, "~> 2.0"},
-      {:jason, "~> 1.1"}
     ]
   end
 end

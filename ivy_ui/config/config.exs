@@ -8,9 +8,9 @@
 use Mix.Config
 
 # Configures the endpoint
-config :ui, IvyUiWeb.Endpoint,
+config :ivy_ui, IvyUiWeb.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "EvKsc2KfEsON3KRAzluZ3X69vaRgoksoKlS3VR0yJlQjMVsAyHt+k/YLOONcP5mv",
+  secret_key_base: System.get_env("SECRET_KEY_BASE"),
   render_errors: [view: IvyUiWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: IvyUi.PubSub,
   live_view: [signing_salt: "Ih1xeYFN"]

@@ -1,6 +1,6 @@
-defmodule IvyCamera.Routes.Streams.Live do
+defmodule IvyUi.Streams.Delayed do
   @moduledoc """
-  Plug for streaming live images (mjpg)
+  Plug for streaming a delayed or Slow Motion set of images
   """
 
   import Plug.Conn
@@ -11,6 +11,8 @@ defmodule IvyCamera.Routes.Streams.Live do
   def init(opts), do: opts
 
   def call(conn, _opts) do
+    GenServer.call(IvyCamera.Camera, :start_recording)
+
     conn
     |> put_resp_header("Age", "0")
     |> put_resp_header("Cache-Control", "no-cache, private")
@@ -21,7 +23,7 @@ defmodule IvyCamera.Routes.Streams.Live do
   end
 
   defp send_pictures(conn) do
-    {:ok, picture} = GenServer.call(IvyCamera.Camera, {:next_frame, :live})
+    {:ok, picture} = GenServer.call(IvyCamera.Camera, :next_frame)
 
     conn
     |> send_picture(picture)
